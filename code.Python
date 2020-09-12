@@ -1,0 +1,48 @@
+!pip install adafruit-io     # Automatically install Adafruit IO Python code for python scripts to use
+
+from Adafruit_IO import RequestError,Client,Feed     #Import library and create instance of REST client
+x="1062000"                                          # Adafruit IO Username
+y="aio_beIj29aYKaSL56cIlTxaPjvwDWpv"                 # Adafruit IO API key
+aio = Client(x,y)
+
+new = Feed(name='light')                             # Create feed
+
+result = aio.create_feed(new)                        # Send the Feed to IO to create
+                                                     # The returned object will contain all the details about the created feed
+                                                     
+!pip install python-telegram-bot                     # Provides a frontend to the programmer
+
+from telegram.ext import Updater,CommandHandler
+import requests
+from Adafruit_IO import Data                         # Import library and create instance of REST client.
+def get_url():
+    contents = requests.get('https://random.dog/woof.json').json()
+    url = contents['url']
+    return url
+
+def on(bot,update):
+    url = get_url()
+    chat_id = update.message.chat_id
+    txt = 'light is turning on'
+    pic = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Green_sphere.svg/1024px-Green_sphere.svg.png'
+    bot.send_message(chat_id,txt)
+    bot.send_photo(chat_id,pic)
+    value = Data(value=1)                             # Create a data item with value 1 in the 'light' feed.
+    value_send = aio.create_data('light',value)
+
+def off(bot,update):
+    url = get_url()
+    chat_id = update.message.chat_id
+    txt = 'light is turning off'
+    pic = 'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTuueKIndqjMG0rlzPZrO0UUFP6ts8b_CrUIQ&usqp=CAU'
+    bot.send_message(chat_id,txt)
+    bot.send_photo(chat_id,pic)
+    value = Data(value=0)                             # Create a data item with value 0 in the 'light' feed.
+    value_send = aio.create_data('light',value)
+    
+u = Updater('1259844875:AAGJm_bLU7ypQy2YVhgN3UM6lUk2S6D5nN4')  #Telegram bot API Key
+dp = u.dispatcher
+dp.add_handler(CommandHandler('on',on))
+dp.add_handler(CommandHandler('off',off))
+u.start_polling()                                     # Starts polling updates from Telegram
+u.idle                                                # Blocks until one of the signals are received and stops the updater
